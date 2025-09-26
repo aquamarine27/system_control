@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import "../styles/Login.css";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [emailFocused, setEmailFocused] = useState(false);
+  const [loginFocused, setLoginFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const navigate = useNavigate();
 
@@ -14,7 +14,7 @@ export default function Login() {
     e.preventDefault();
 
     // Validation check
-    if (email.includes("@") && password.length >= 3) {
+    if (login && password.length >= 3) {
       // Placeholder for backend API call
       localStorage.setItem("token", "fake-jwt-token");
       navigate("/");
@@ -58,21 +58,21 @@ export default function Login() {
         <div className="login-container">
           <h2>Login</h2>
           <form onSubmit={handleSubmit} className="login-form">
-            {/* Email Input Section */}
+            {/* Login Input Section */}
             <div className="login-input-wrapper">
               <input
-                type="email"
+                type="text"
                 placeholder=" "
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onFocus={() => setEmailFocused(true)}
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
+                onFocus={() => setLoginFocused(true)}
                 onBlur={() => {
-                  if (!email) setEmailFocused(false);
+                  if (!login) setLoginFocused(false);
                 }}
                 required
               />
-              <span className={`login-placeholder ${emailFocused || email ? "login-placeholder-active" : ""}`}>
-                Email
+              <span className={`login-placeholder ${loginFocused || login ? "login-placeholder-active" : ""}`}>
+                Login
               </span>
             </div>
 

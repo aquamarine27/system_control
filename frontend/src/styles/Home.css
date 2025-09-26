@@ -1,6 +1,24 @@
-.home {
-  text-align: center;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+.home-container {
+  display: flex;
+  height: 100vh;
+}
+
+.home-content {
+  flex-grow: 1;
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.home-main {
+  background-color: #fff;
+  border-radius: 20px;
   padding: 2rem;
-  background-color: #f5f5f5;
-  font-family: sans-serif;
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+  width: 80%;
+  max-width: 1200px;
 }

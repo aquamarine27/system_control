@@ -29,7 +29,7 @@ body {
 .wave-line {
   stroke-dasharray: 1000; 
   stroke-dashoffset: 1000; 
-   animation: drawLine 20s ease-in-out infinite;
+  animation: drawLine 20s ease-in-out infinite;
 }
 
 .wave-line:nth-child(1) {
@@ -50,10 +50,10 @@ body {
 
 @keyframes drawLine {
   35% {
-    stroke-dashoffset: 0; /* Pause5s */
+    stroke-dashoffset: 0;
   }
   100% {
-    stroke-dashoffset: -1000; /* pause10s */
+    stroke-dashoffset: -1000;
   }
 }
 
