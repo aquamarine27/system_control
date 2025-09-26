@@ -23,7 +23,6 @@ export default function Login() {
   };
 
 
-  
   return (
     <>
       <title>systemControl - Login</title>
