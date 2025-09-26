@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Login.css";
 
-
-
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -11,6 +9,7 @@ export default function Login() {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const navigate = useNavigate();
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -22,11 +21,40 @@ export default function Login() {
     }
   };
 
-
   return (
     <>
       <title>systemControl - Login</title>
       <div className="login-page">
+        <svg className="background-waves" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path
+            d="M 10 0 C 10 10, 12 20, 10 30 C 8 40, 12 50, 10 60 C 8 70, 12 80, 10 120 C 10 100, 10 100, 10 100"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="0.5"
+            className="wave-line"
+          />
+          <path
+            d="M 30 0 C 30 25, 35 35, 30 55 C 25 75, 35 85, 30 100"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="0.5"
+            className="wave-line"
+          />
+          <path
+            d="M 60 0 C 60 30, 65 40, 60 60 C 55 80, 65 90, 60 100"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="0.5"
+            className="wave-line"
+          />
+          <path
+            d="M 80 0 C 80 35, 85 45, 80 65 C 75 85, 85 95, 80 100"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="0.5"
+            className="wave-line"
+          />
+        </svg>
         <div className="login-container">
           <h2>Login</h2>
           <form onSubmit={handleSubmit} className="login-form">
