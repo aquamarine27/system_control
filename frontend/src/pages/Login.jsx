@@ -8,13 +8,36 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginFocused, setLoginFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [errors, setErrors] = useState({ login: "", password: "" });
   const navigate = useNavigate();
+
+  const validateLogin = (loginValue) => {
+    if (loginValue.length < 5 || loginValue.length > 20) {
+      return "Login must be between 5 and 20 characters";
+    }
+    // Placeholder for API call to check if login exists
+    return "";
+  };
+
+  const validatePassword = (passwordValue) => {
+    if (passwordValue.length < 3 || passwordValue.length > 20) {
+      return "Password must be between 3 and 20 characters";
+    }
+    return "";
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validation check
-    if (login && password.length >= 3) {
+    const loginError = validateLogin(login);
+    const passwordError = validatePassword(password);
+
+    setErrors({
+      login: loginError,
+      password: passwordError,
+    });
+
+    if (!loginError && !passwordError) {
       // Placeholder for backend API call
       localStorage.setItem("token", "fake-jwt-token");
       navigate("/");
@@ -55,7 +78,7 @@ export default function Login() {
             className="wave-line"
           />
         </svg>
-        <div className="login-container">
+        <div className={`login-container ${errors.login || errors.password ? "login-container-expanded" : ""}`}>
           <h2>Login</h2>
           <form onSubmit={handleSubmit} className="login-form">
             {/* Login Input Section */}
@@ -64,16 +87,24 @@ export default function Login() {
                 type="text"
                 placeholder=" "
                 value={login}
-                onChange={(e) => setLogin(e.target.value)}
+                onChange={(e) => {
+                  setLogin(e.target.value);
+                  setErrors({ ...errors, login: validateLogin(e.target.value) });
+                }}
                 onFocus={() => setLoginFocused(true)}
                 onBlur={() => {
                   if (!login) setLoginFocused(false);
+                  setErrors({ ...errors, login: validateLogin(login) });
                 }}
+                className={errors.login ? "input-error" : ""}
                 required
               />
-              <span className={`login-placeholder ${loginFocused || login ? "login-placeholder-active" : ""}`}>
+              <span className={`login-placeholder ${loginFocused || login ? "login-placeholder-active" : ""} ${errors.login ? "error-placeholder" : ""}`}>
                 Login
               </span>
+              {errors.login && (
+                <span className="error-message">{errors.login}</span>
+              )}
             </div>
 
             {/* Password Input Section */}
@@ -83,11 +114,16 @@ export default function Login() {
                   type={showPassword ? "text" : "password"}
                   placeholder=" "
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrors({ ...errors, password: validatePassword(e.target.value) });
+                  }}
                   onFocus={() => setPasswordFocused(true)}
                   onBlur={() => {
                     if (!password) setPasswordFocused(false);
+                    setErrors({ ...errors, password: validatePassword(password) });
                   }}
+                  className={errors.password ? "input-error" : ""}
                   required
                 />
                 <button
@@ -98,9 +134,12 @@ export default function Login() {
                   <img src={showPassword ? `/eye-show.svg` : `/eye-hide.svg`} alt="Toggle Password" />
                 </button>
               </div>
-              <span className={`login-placeholder ${passwordFocused || password ? "login-placeholder-active" : ""}`}>
+              <span className={`login-placeholder ${passwordFocused || password ? "login-placeholder-active" : ""} ${errors.password ? "error-placeholder" : ""}`}>
                 Enter your password
               </span>
+              {errors.password && (
+                <span className="error-message">{errors.password}</span>
+              )}
             </div>
 
             {/* Submit Button */}

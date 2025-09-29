@@ -70,6 +70,21 @@ body {
   transform: translateY(40px) scale(0.92);
   animation: elegantFadeIn 0.9s cubic-bezier(0.33, 0, 0, 1) forwards;
   z-index: 1;
+  transition: width 0.5s ease, height 0.5s ease, padding 0.5s ease;
+}
+
+.register-container-expanded {
+  width: 650px;
+  padding: 48px;
+}
+
+
+.register-container-expanded .register-placeholder {
+  font-size: 18px;
+}
+
+.register-container-expanded .register-placeholder.register-placeholder-active {
+  font-size: 16px;
 }
 
 @keyframes elegantFadeIn {
@@ -105,6 +120,7 @@ body {
   opacity: 0;
   transform: translateY(20px);
   animation: slideIn 0.9s cubic-bezier(0.33, 0, 0, 1) 0.2s forwards;
+  margin-bottom: 24px;
 }
 
 .register-input-wrapper input {
@@ -123,6 +139,11 @@ body {
   border-color: #007bff;
   box-shadow: 0 0 15px rgba(0, 123, 255, 0.7);
   transform: scale(1.02);
+}
+
+.register-input-wrapper input.input-error {
+  border-color: #FF4040;
+  box-shadow: 0 0 15px rgba(255, 64, 64, 0.5);
 }
 
 .register-placeholder {
@@ -146,6 +167,28 @@ body {
   padding: 0;
   opacity: 1;
   transform: translateY(0);
+}
+
+.error-placeholder {
+  color: #FF4040 !important;
+}
+
+.error-message {
+  position: absolute;
+  bottom: -20px;
+  left: 16px;
+  font-size: 14px;
+  color: #FF4040;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: errorFadeIn 0.3s ease forwards;
+}
+
+@keyframes errorFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .register-password-container {

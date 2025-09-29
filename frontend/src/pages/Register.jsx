@@ -10,13 +10,45 @@ export default function Register() {
   const [loginFocused, setLoginFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+  const [errors, setErrors] = useState({ login: "", password: "", confirmPassword: "" });
   const navigate = useNavigate();
+
+  const validateLogin = (loginValue) => {
+    if (loginValue.length < 5 || loginValue.length > 20) {
+      return "Login must be between 5 and 20 characters";
+    }
+    // Placeholder for API call to check if login exists
+    return "";
+  };
+
+  const validatePassword = (passwordValue) => {
+    if (passwordValue.length < 3 || passwordValue.length > 20) {
+      return "Password must be between 3 and 20 characters";
+    }
+    return "";
+  };
+
+  const validateConfirmPassword = (passwordValue, confirmPasswordValue) => {
+    if (passwordValue !== confirmPasswordValue) {
+      return "Passwords do not match";
+    }
+    return "";
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validation check
-    if (login && password.length >= 3 && password === confirmPassword) {
+    const loginError = validateLogin(login);
+    const passwordError = validatePassword(password);
+    const confirmPasswordError = validateConfirmPassword(password, confirmPassword);
+
+    setErrors({
+      login: loginError,
+      password: passwordError,
+      confirmPassword: confirmPasswordError,
+    });
+
+    if (!loginError && !passwordError && !confirmPasswordError) {
       // Placeholder for backend API call
       localStorage.setItem("token", "fake-jwt-token");
       navigate("/login");
@@ -57,7 +89,7 @@ export default function Register() {
             className="wave-line"
           />
         </svg>
-        <div className="register-container">
+        <div className={`register-container ${errors.login || errors.password || errors.confirmPassword ? "register-container-expanded" : ""}`}>
           <h2>Create an account</h2>
           <form onSubmit={handleSubmit} className="register-form">
             {/* Login Input Section */}
@@ -66,16 +98,24 @@ export default function Register() {
                 type="text"
                 placeholder=" "
                 value={login}
-                onChange={(e) => setLogin(e.target.value)}
+                onChange={(e) => {
+                  setLogin(e.target.value);
+                  setErrors({ ...errors, login: validateLogin(e.target.value) });
+                }}
                 onFocus={() => setLoginFocused(true)}
                 onBlur={() => {
                   if (!login) setLoginFocused(false);
+                  setErrors({ ...errors, login: validateLogin(login) });
                 }}
+                className={errors.login ? "input-error" : ""}
                 required
               />
-              <span className={`register-placeholder ${loginFocused || login ? "register-placeholder-active" : ""}`}>
+              <span className={`register-placeholder ${loginFocused || login ? "register-placeholder-active" : ""} ${errors.login ? "error-placeholder" : ""}`}>
                 Login
               </span>
+              {errors.login && (
+                <span className="error-message">{errors.login}</span>
+              )}
             </div>
 
             {/* Password Input Section */}
@@ -85,11 +125,24 @@ export default function Register() {
                   type={showPassword ? "text" : "password"}
                   placeholder=" "
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrors({
+                      ...errors,
+                      password: validatePassword(e.target.value),
+                      confirmPassword: validateConfirmPassword(e.target.value, confirmPassword),
+                    });
+                  }}
                   onFocus={() => setPasswordFocused(true)}
                   onBlur={() => {
                     if (!password) setPasswordFocused(false);
+                    setErrors({
+                      ...errors,
+                      password: validatePassword(password),
+                      confirmPassword: validateConfirmPassword(password, confirmPassword),
+                    });
                   }}
+                  className={errors.password ? "input-error" : ""}
                   required
                 />
                 <button
@@ -100,9 +153,12 @@ export default function Register() {
                   <img src={showPassword ? `/eye-show.svg` : `/eye-hide.svg`} alt="Toggle Password" />
                 </button>
               </div>
-              <span className={`register-placeholder ${passwordFocused || password ? "register-placeholder-active" : ""}`}>
+              <span className={`register-placeholder ${passwordFocused || password ? "register-placeholder-active" : ""} ${errors.password ? "error-placeholder" : ""}`}>
                 Enter your password
               </span>
+              {errors.password && (
+                <span className="error-message">{errors.password}</span>
+              )}
             </div>
 
             {/* Confirm Password Input Section */}
@@ -112,11 +168,22 @@ export default function Register() {
                   type={showPassword ? "text" : "password"}
                   placeholder=" "
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setErrors({
+                      ...errors,
+                      confirmPassword: validateConfirmPassword(password, e.target.value),
+                    });
+                  }}
                   onFocus={() => setConfirmPasswordFocused(true)}
                   onBlur={() => {
                     if (!confirmPassword) setConfirmPasswordFocused(false);
+                    setErrors({
+                      ...errors,
+                      confirmPassword: validateConfirmPassword(password, confirmPassword),
+                    });
                   }}
+                  className={errors.confirmPassword ? "input-error" : ""}
                   required
                 />
                 <button
@@ -127,9 +194,12 @@ export default function Register() {
                   <img src={showPassword ? `/eye-show.svg` : `/eye-hide.svg`} alt="Toggle Confirm Password" />
                 </button>
               </div>
-              <span className={`register-placeholder ${confirmPasswordFocused || confirmPassword ? "register-placeholder-active" : ""}`}>
+              <span className={`register-placeholder ${confirmPasswordFocused || confirmPassword ? "register-placeholder-active" : ""} ${errors.confirmPassword ? "error-placeholder" : ""}`}>
                 Confirm your password
               </span>
+              {errors.confirmPassword && (
+                <span className="error-message">{errors.confirmPassword}</span>
+              )}
             </div>
 
             {/* Submit Button */}
