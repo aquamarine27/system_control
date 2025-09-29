@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/Login.css";
+import "../styles/login.css";
 
 export default function Login() {
   const [login, setLogin] = useState("");
@@ -9,6 +9,8 @@ export default function Login() {
   const [loginFocused, setLoginFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [errors, setErrors] = useState({ login: "", password: "" });
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [countdown, setCountdown] = useState(5);
   const navigate = useNavigate();
 
   const validateLogin = (loginValue) => {
@@ -40,14 +42,27 @@ export default function Login() {
     if (!loginError && !passwordError) {
       // Placeholder for backend API call
       localStorage.setItem("token", "fake-jwt-token");
-      navigate("/");
+      setShowSuccessModal(true);
+      setCountdown(5); 
     }
   };
+
+  useEffect(() => {
+    if (showSuccessModal && countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    } else if (showSuccessModal && countdown === 0) {
+      setShowSuccessModal(false);
+      navigate("/");
+    }
+  }, [showSuccessModal, countdown, navigate]);
 
   return (
     <>
       <title>systemControl - Login</title>
-      <div className="login-page">
+      <div className={`login-page ${showSuccessModal ? "blurred" : ""}`}>
         <svg className="background-waves" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
           <path
             d="M 10 0 C 10 10, 12 20, 10 30 C 8 40, 12 50, 10 60 C 8 70, 12 80, 10 120 C 10 100, 10 100, 10 100"
@@ -152,6 +167,17 @@ export default function Login() {
           </p>
         </div>
       </div>
+
+          {/*Modal-Content*/}
+      {showSuccessModal && (
+        <div className="auth-modal-overlay">
+          <div className="auth-modal-content">
+            <h3>Authorization Successful!</h3>
+            <img src="/success-icon.svg" alt="Success" className="auth-success-icon" />
+            <p className="auth-redirect-text">Redirecting to home page in {countdown}...</p>
+          </div>
+        </div>
+      )}
     </>
   );
 }

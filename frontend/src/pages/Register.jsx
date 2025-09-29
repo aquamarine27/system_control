@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Register.css";
 
@@ -11,6 +11,8 @@ export default function Register() {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
   const [errors, setErrors] = useState({ login: "", password: "", confirmPassword: "" });
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [countdown, setCountdown] = useState(5);
   const navigate = useNavigate();
 
   const validateLogin = (loginValue) => {
@@ -51,14 +53,27 @@ export default function Register() {
     if (!loginError && !passwordError && !confirmPasswordError) {
       // Placeholder for backend API call
       localStorage.setItem("token", "fake-jwt-token");
-      navigate("/login");
+      setShowSuccessModal(true);
+      setCountdown(5); 
     }
   };
+
+  useEffect(() => {
+    if (showSuccessModal && countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    } else if (showSuccessModal && countdown === 0) {
+      setShowSuccessModal(false);
+      navigate("/login");
+    }
+  }, [showSuccessModal, countdown, navigate]);
 
   return (
     <>
       <title>systemControl - Register</title>
-      <div className="register-page">
+      <div className={`register-page ${showSuccessModal ? "blurred" : ""}`}>
         <svg className="background-waves" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
           <path
             d="M 10 0 C 10 10, 12 20, 10 30 C 8 40, 12 50, 10 60 C 8 70, 12 80, 10 120 C 10 100, 10 100, 10 100"
@@ -212,6 +227,17 @@ export default function Register() {
           </p>
         </div>
       </div>
+      
+          {/*Modal-Content*/}
+      {showSuccessModal && (
+        <div className="auth-modal-overlay">
+          <div className="auth-modal-content">
+            <h3>Registration Successful!</h3>
+            <img src="/success-icon.svg" alt="Success" className="auth-success-icon" />
+            <p className="auth-redirect-text">Redirecting to login page in {countdown}...</p>
+          </div>
+        </div>
+      )}
     </>
   );
 }
