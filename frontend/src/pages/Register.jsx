@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/Register.css";
+import "../styles/register.css";
 
 export default function Register() {
   const [login, setLogin] = useState("");
@@ -227,7 +227,7 @@ export default function Register() {
           </p>
         </div>
       </div>
-      
+
           {/*Modal-Content*/}
       {showSuccessModal && (
         <div className="auth-modal-overlay">
