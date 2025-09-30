@@ -1,3 +1,4 @@
+# docker-compose.yml
 services:
   frontend:
     build:
@@ -11,6 +12,8 @@ services:
       - ./frontend/vite.config.js:/app/vite.config.js
     depends_on:
       - backend
+    environment:
+      - NODE_ENV=development
 
   backend:
     build:
@@ -18,3 +21,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    volumes:
+      - ./backend/.env:/app/.env  
+    environment:
+      - API_SECRET=your_api_secret_key  
+      - REFRESH_SECRET=your_refresh_secret_key  

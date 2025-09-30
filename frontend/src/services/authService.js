@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:3000/api/v1/auth";
+const API_URL = process.env.NODE_ENV === "development" ? "http://localhost:3000/api/v1/auth" : "http://backend:3000/api/v1/auth";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -76,4 +76,5 @@ export const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+// export api for other
 export { api };
