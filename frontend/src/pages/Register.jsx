@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/register.css";
+import { register } from "../services/authService";
 
 export default function Register() {
   const [login, setLogin] = useState("");
@@ -19,7 +20,6 @@ export default function Register() {
     if (loginValue.length < 5 || loginValue.length > 20) {
       return "Login must be between 5 and 20 characters";
     }
-    // Placeholder for API call to check if login exists
     return "";
   };
 
@@ -37,7 +37,7 @@ export default function Register() {
     return "";
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const loginError = validateLogin(login);
@@ -51,10 +51,18 @@ export default function Register() {
     });
 
     if (!loginError && !passwordError && !confirmPasswordError) {
-      // Placeholder for backend API call
-      localStorage.setItem("token", "fake-jwt-token");
-      setShowSuccessModal(true);
-      setCountdown(5); 
+      try {
+        await register(login, password);
+        setShowSuccessModal(true);
+        setCountdown(5);
+      } catch (error) {
+        console.error("Register error:", error.message);
+        if (error.message === "User with this login already exists") {
+          setErrors({ ...errors, login: error.message });
+        } else {
+          setErrors({ ...errors, confirmPassword: error.message });
+        }
+      }
     }
   };
 
@@ -75,39 +83,14 @@ export default function Register() {
       <title>systemControl - Register</title>
       <div className={`register-page ${showSuccessModal ? "blurred" : ""}`}>
         <svg className="background-waves" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <path
-            d="M 10 0 C 10 10, 12 20, 10 30 C 8 40, 12 50, 10 60 C 8 70, 12 80, 10 120 C 10 100, 10 100, 10 100"
-            fill="none"
-            stroke="#fff"
-            strokeWidth="0.5"
-            className="wave-line"
-          />
-          <path
-            d="M 30 0 C 30 25, 35 35, 30 55 C 25 75, 35 85, 30 100"
-            fill="none"
-            stroke="#fff"
-            strokeWidth="0.5"
-            className="wave-line"
-          />
-          <path
-            d="M 60 0 C 60 30, 65 40, 60 60 C 55 80, 65 90, 60 100"
-            fill="none"
-            stroke="#fff"
-            strokeWidth="0.5"
-            className="wave-line"
-          />
-          <path
-            d="M 80 0 C 80 35, 85 45, 80 65 C 75 85, 85 95, 80 100"
-            fill="none"
-            stroke="#fff"
-            strokeWidth="0.5"
-            className="wave-line"
-          />
+          <path d="M 10 0 C 10 10, 12 20, 10 30 C 8 40, 12 50, 10 60 C 8 70, 12 80, 10 120 C 10 100, 10 100, 10 100" fill="none" stroke="#fff" strokeWidth="0.5" className="wave-line" />
+          <path d="M 30 0 C 30 25, 35 35, 30 55 C 25 75, 35 85, 30 100" fill="none" stroke="#fff" strokeWidth="0.5" className="wave-line" />
+          <path d="M 60 0 C 60 30, 65 40, 60 60 C 55 80, 65 90, 60 100" fill="none" stroke="#fff" strokeWidth="0.5" className="wave-line" />
+          <path d="M 80 0 C 80 35, 85 45, 80 65 C 75 85, 85 95, 80 100" fill="none" stroke="#fff" strokeWidth="0.5" className="wave-line" />
         </svg>
         <div className={`register-container ${errors.login || errors.password || errors.confirmPassword ? "register-container-expanded" : ""}`}>
           <h2>Create an account</h2>
           <form onSubmit={handleSubmit} className="register-form">
-            {/* Login Input Section */}
             <div className="register-input-wrapper">
               <input
                 type="text"
@@ -128,12 +111,8 @@ export default function Register() {
               <span className={`register-placeholder ${loginFocused || login ? "register-placeholder-active" : ""} ${errors.login ? "error-placeholder" : ""}`}>
                 Login
               </span>
-              {errors.login && (
-                <span className="error-message">{errors.login}</span>
-              )}
+              {errors.login && <span className="error-message">{errors.login}</span>}
             </div>
-
-            {/* Password Input Section */}
             <div className="register-input-wrapper">
               <div className="register-password-container">
                 <input
@@ -165,18 +144,14 @@ export default function Register() {
                   className="register-toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  <img src={showPassword ? `/eye-show.svg` : `/eye-hide.svg`} alt="Toggle Password" />
+                  <img src={showPassword ? "/eye-show.svg" : "/eye-hide.svg"} alt="Toggle Password" />
                 </button>
               </div>
               <span className={`register-placeholder ${passwordFocused || password ? "register-placeholder-active" : ""} ${errors.password ? "error-placeholder" : ""}`}>
                 Enter your password
               </span>
-              {errors.password && (
-                <span className="error-message">{errors.password}</span>
-              )}
+              {errors.password && <span className="error-message">{errors.password}</span>}
             </div>
-
-            {/* Confirm Password Input Section */}
             <div className="register-input-wrapper">
               <div className="register-password-container">
                 <input
@@ -206,29 +181,21 @@ export default function Register() {
                   className="register-toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  <img src={showPassword ? `/eye-show.svg` : `/eye-hide.svg`} alt="Toggle Confirm Password" />
+                  <img src={showPassword ? "/eye-show.svg" : "/eye-hide.svg"} alt="Toggle Confirm Password" />
                 </button>
               </div>
               <span className={`register-placeholder ${confirmPasswordFocused || confirmPassword ? "register-placeholder-active" : ""} ${errors.confirmPassword ? "error-placeholder" : ""}`}>
                 Confirm your password
               </span>
-              {errors.confirmPassword && (
-                <span className="error-message">{errors.confirmPassword}</span>
-              )}
+              {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
             </div>
-
-            {/* Submit Button */}
             <button type="submit">Create account</button>
           </form>
-
-          {/* Login Link Section */}
           <p className="register-login-text">
             Already have an account? <a href="/login">Log in</a>
           </p>
         </div>
       </div>
-
-          {/*Modal-Content*/}
       {showSuccessModal && (
         <div className="auth-modal-overlay">
           <div className="auth-modal-content">
