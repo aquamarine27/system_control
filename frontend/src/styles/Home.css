@@ -38,6 +38,7 @@
   align-items: center;
   margin: 0 auto 30px auto; 
   position: relative; 
+  will-change: transform; 
 }
 
 .home-search-input {
@@ -74,7 +75,6 @@
   opacity: 1;
 }
 
-
 .home-search-input {
   opacity: 0.8;
 }
@@ -92,7 +92,6 @@
   }
 }
 
-
 .home-search-icon {
   position: absolute;
   right: 15px; 
@@ -102,6 +101,8 @@
   height: 22px;
   transition: transform 0.3s ease; 
   filter: invert(15%) sepia(90%) saturate(5000%) hue-rotate(350deg) brightness(90%) contrast(90%); 
+  pointer-events: none;
+  user-select: none;
 }
 
 .home-search-bar:focus-within .home-search-icon {
@@ -116,6 +117,7 @@
   margin-bottom: 20px;
   padding: 10px;
   align-content: flex-start;
+  will-change: transform; 
 }
 
 /* Card styles */
@@ -194,7 +196,6 @@
   box-shadow: 0 0 15px rgba(58, 111, 248, 0.5);
   animation: pulse 0.5s forwards;
 }
-
 
 @keyframes pulse {
   from {
