@@ -5,17 +5,11 @@ import (
 	"gorm.io/gorm"
 )
 
-type Project struct {
-	gorm.Model
-	Title  string `json:"title"`
-	UserID uint   `gorm:"index"`
-}
-
 type User struct {
 	gorm.Model
 	Login    string    `gorm:"unique;not null" json:"login"`
 	Password string    `gorm:"not null" json:"password"`
-	Role     uint      `gorm:"not null" json:"role"` // 1-user, 2-manager, 3-admin
+	Role     uint      `gorm:"not null" json:"role"` // 1-user, 2-manager, 3-enginer
 	Projects []Project `gorm:"foreignKey:UserID" json:"projects"`
 }
 

@@ -23,16 +23,24 @@ func Setup() error {
 	}
 	defer db.Close()
 
+	// exist db
 	dbName := "control_system"
-	_, err = db.Exec("CREATE DATABASE " + dbName + " WITH OWNER postgres")
+	var exists bool
+	err = db.QueryRow("SELECT EXISTS(SELECT datname FROM pg_database WHERE datname = $1)", dbName).Scan(&exists)
 	if err != nil {
-
-		if err.Error() != "pq: database "+dbName+" already exists" {
-			log.Fatal("Failed to create database:", err)
-		}
+		log.Fatal("Failed to check database existence:", err)
 	}
 
-	// connected db
+	if !exists {
+		// if not exist - create db
+		_, err = db.Exec("CREATE DATABASE " + dbName + " WITH OWNER postgres")
+		if err != nil {
+			log.Fatal("Failed to create database:", err)
+		}
+		log.Println("Database 'control_system' created successfully")
+	}
+
+	// connected to db
 	dsn := "postgres://postgres:12345@localhost:5432/control_system?sslmode=disable"
 	dbGorm, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
