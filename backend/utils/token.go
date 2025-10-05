@@ -13,7 +13,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// GetEnv helper
+// helper
 func GetEnv(key string) string {
 	return strings.TrimSpace(os.Getenv(key))
 }
@@ -65,6 +65,10 @@ func GetToken(c *fiber.Ctx) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
+		}
+
+		if c.Path() == "/api/v1/auth/refresh" {
+			return []byte(GetEnv("REFRESH_SECRET")), nil
 		}
 		return []byte(GetEnv("API_SECRET")), nil
 	})

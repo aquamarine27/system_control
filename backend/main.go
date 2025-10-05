@@ -3,18 +3,24 @@ package main
 import (
 	"log"
 
+	"backend/models"
+	"backend/routers"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
-
-	"backend/routers"
 )
 
 func main() {
 	// Load .env
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
+	}
+
+	// Setup database
+	if err := models.Setup(); err != nil {
+		log.Fatal("Failed to setup database:", err)
 	}
 
 	app := fiber.New()

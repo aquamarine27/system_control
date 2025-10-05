@@ -1,53 +1,30 @@
 package models
 
-import "sync"
-
-type Project struct {
-	ID    uint   `json:"id"`
-	Title string `json:"title"`
-}
-
-// User struct
-type User struct {
-	ID       uint      `json:"id"`
-	Login    string    `json:"login"`
-	Password string    `json:"password"`
-	Role     uint      `json:"role"` // 1-user, 2-manager, 3-admin
-	Projects []Project `json:"projects"`
-}
-
-// In-memory storage
-var (
-	users          = make(map[uint]User)
-	userID    uint = 1
-	usersLock sync.Mutex
+import (
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
-// AddUser (simulate DB create)
-func AddUser(user User) {
-	usersLock.Lock()
-	defer usersLock.Unlock()
-	user.ID = userID
-	users[userID] = user
-	userID++
+type Project struct {
+	gorm.Model
+	Title  string `json:"title"`
+	UserID uint   `gorm:"index"`
 }
 
-// GetUserByLogin
-func GetUserByLogin(login string) (User, bool) {
-	usersLock.Lock()
-	defer usersLock.Unlock()
-	for _, u := range users {
-		if u.Login == login {
-			return u, true
-		}
+type User struct {
+	gorm.Model
+	Login    string    `gorm:"unique;not null" json:"login"`
+	Password string    `gorm:"not null" json:"password"`
+	Role     uint      `gorm:"not null" json:"role"` // 1-user, 2-manager, 3-admin
+	Projects []Project `gorm:"foreignKey:UserID" json:"projects"`
+}
+
+// HashPassword
+func (u *User) HashPassword() error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
 	}
-	return User{}, false
-}
-
-// GetUserByID
-func GetUserByID(id uint) (User, bool) {
-	usersLock.Lock()
-	defer usersLock.Unlock()
-	u, exists := users[id]
-	return u, exists
+	u.Password = string(hashedPassword)
+	return nil
 }

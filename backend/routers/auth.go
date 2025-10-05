@@ -1,4 +1,3 @@
-// backend/routers/auth.go
 package routers
 
 import (

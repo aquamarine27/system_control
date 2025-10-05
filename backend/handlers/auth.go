@@ -1,8 +1,6 @@
-// backend/handlers/auth.go
 package handlers
 
 import (
-	"errors"
 	"net/http"
 	"strings"
 
@@ -12,13 +10,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type RegisterInput struct {
 	Login           string `json:"login"`
 	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirm_password"`
-	Role            uint   `json:"role"` // 1-user, 2-manager, 3-admin
+	Role            uint   `json:"role"` // 1-user, 2-manager, 3-enginer
 }
 
 type LoginInput struct {
@@ -43,25 +42,29 @@ func Register(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Passwords do not match"})
 	}
 
-	// Check if user exists (in-memory)
-	if _, exists := models.GetUserByLogin(input.Login); exists {
+	// Check if user exists
+	var existingUser models.User
+	result := models.DB.Where("login = ?", input.Login).First(&existingUser)
+	if result.Error == nil {
 		return c.Status(http.StatusConflict).JSON(fiber.Map{"error": "User with this login already exists"})
-	}
-
-	// Hash password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to hash password"})
+	} else if result.Error != gorm.ErrRecordNotFound {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
 	}
 
 	// Create user
 	user := models.User{
 		Login:    input.Login,
-		Password: string(hashedPassword),
+		Password: input.Password,
 		Role:     input.Role,
-		Projects: []models.Project{},
 	}
-	models.AddUser(user)
+
+	if err := user.HashPassword(); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to hash password"})
+	}
+
+	if err := models.DB.Create(&user).Error; err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create user"})
+	}
 
 	return c.Status(http.StatusCreated).JSON(fiber.Map{"message": "User registered successfully"})
 }
@@ -78,9 +81,12 @@ func Login(c *fiber.Ctx) error {
 	input.Password = strings.TrimSpace(input.Password)
 
 	// Find user
-	user, exists := models.GetUserByLogin(input.Login)
-	if !exists {
-		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid login or password"})
+	var user models.User
+	if err := models.DB.Where("login = ?", input.Login).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid login or password"})
+		}
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
 	}
 
 	// Verify password
@@ -98,6 +104,7 @@ func Login(c *fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate refresh token"})
 	}
 
+	// send token json
 	return c.JSON(fiber.Map{
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
@@ -112,12 +119,7 @@ func Refresh(c *fiber.Ctx) error {
 	}
 
 	// Parse and validate refresh token
-	token, err := jwt.Parse(refreshTokenStr, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
-		}
-		return []byte(utils.GetEnv("REFRESH_SECRET")), nil
-	})
+	token, err := utils.GetToken(c)
 	if err != nil || !token.Valid {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid refresh token"})
 	}
@@ -127,15 +129,19 @@ func Refresh(c *fiber.Ctx) error {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid token claims"})
 	}
 
-	userID, ok := claims["id"].(float64)
+	userIDFloat, ok := claims["id"].(float64)
 	if !ok {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Cannot get user ID"})
 	}
+	userID := uint(userIDFloat)
 
 	// Find user by ID
-	user, exists := models.GetUserByID(uint(userID))
-	if !exists {
-		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "User not found"})
+	var user models.User
+	if err := models.DB.First(&user, userID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "User not found"})
+		}
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
 	}
 
 	// Generate new access token
@@ -151,9 +157,13 @@ func Refresh(c *fiber.Ctx) error {
 func GetUserInfo(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(uint)
 	role := c.Locals("role").(uint)
-	user, exists := models.GetUserByID(userID)
-	if !exists {
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+
+	var user models.User
+	if err := models.DB.First(&user, userID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+		}
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
 	}
 
 	return c.JSON(fiber.Map{

@@ -1,4 +1,3 @@
-// backend/middleware/jwtmiddleware.go
 package middleware
 
 import (
@@ -27,18 +26,20 @@ func JWTMiddleware() fiber.Handler {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Dead token"})
 		}
 
-		userID, ok := claims["id"].(float64)
+		userIDFloat, ok := claims["id"].(float64)
 		if !ok {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "cannot get user id"})
 		}
+		userID := uint(userIDFloat)
 
-		role, ok := claims["role"].(float64)
+		roleFloat, ok := claims["role"].(float64)
 		if !ok {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "cannot get user role"})
 		}
+		role := uint(roleFloat)
 
-		c.Locals("user_id", uint(userID))
-		c.Locals("role", uint(role))
+		c.Locals("user_id", userID)
+		c.Locals("role", role)
 		return c.Next()
 	}
 }
