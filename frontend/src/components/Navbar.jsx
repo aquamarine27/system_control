@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../styles/navbar.css";
-import { getAuthHeaders, api } from "../services/authService"; 
+import { getUserInfo } from "../services/authService"; 
 
 export default function Navbar() {
   const [username, setUsername] = useState("aquamarine"); 
@@ -11,23 +11,12 @@ export default function Navbar() {
     const fetchUserInfo = async () => {
       try {
         console.log("Fetching user info...");
-        const response = await api.get("/user-info", {
-          headers: getAuthHeaders(),
-        });
-        console.log("Response received:", response.status, response.data);
-        if (response.status === 200) {
-          const data = response.data;
-          setUsername(data.login || "aquamarine");
-          setRole(data.role ? data.role.toString() : "Everyone");
-          localStorage.setItem("login", data.login);
-          localStorage.setItem("role", data.role ? data.role.toString() : "Everyone");
-        } else {
-          setError(`Unexpected status: ${response.status}`);
-          console.error("Unexpected response:", response.data);
-        }
+        const data = await getUserInfo();
+        setUsername(data.login || "aquamarine");
+        setRole(data.role ? data.role.toString() : "Everyone");
       } catch (error) {
-        setError(`Error: ${error.response?.status} - ${error.response?.data?.error || error.message}`);
-        console.error("Fetch error:", error.response?.status, error.response?.data || error.message);
+        setError(`Error: ${error.message}`);
+        console.error("Fetch error:", error.message);
       }
     };
 
@@ -36,9 +25,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("login");
-    localStorage.removeItem("role");
+    document.cookie = "refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     window.location.href = "/login";
   };
 

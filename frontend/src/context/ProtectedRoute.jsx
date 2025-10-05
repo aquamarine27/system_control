@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { isAuthenticated, refreshToken } from "../services/authService";
+import { isAuthenticated } from "../services/authService";
 
 export default function ProtectedRoute({ children }) {
   const location = useLocation();
@@ -11,12 +11,12 @@ export default function ProtectedRoute({ children }) {
     const checkAuth = async () => {
       try {
         console.log("Checking auth...");
-        if (!isAuthenticated()) {
-          console.log("No token, attempting refresh...");
-          await refreshToken();
+        if (isAuthenticated()) {
+          setIsAuthorized(true);
+        } else {
+          console.log("No token, redirecting...");
+          setIsAuthorized(false);
         }
-        console.log("Auth successful");
-        setIsAuthorized(true);
       } catch (error) {
         console.error("Auth check failed:", error.message);
         setIsAuthorized(false);

@@ -8,17 +8,30 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  console.log("Request:", config.method, config.url, config.data);
+  const token = localStorage.getItem("access_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
 api.interceptors.response.use(
-  (response) => {
-    console.log("Response:", response.status, response.data);
-    return response;
-  },
-  (error) => {
-    console.error("Error:", error.response?.status, error.response?.data);
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const response = await api.post("/refresh");
+        localStorage.setItem("access_token", response.data.access_token);
+        originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        console.error("Refresh token failed:", refreshError.response?.data?.error || refreshError.message);
+        return Promise.reject(refreshError);
+      }
+    }
+    console.error("API request failed:", error.response?.data?.error || error.message);
     return Promise.reject(error);
   }
 );
@@ -26,7 +39,6 @@ api.interceptors.response.use(
 export const register = async (login, password, role = 1) => {
   try {
     const response = await api.post("/register", { login, password, confirm_password: password, role });
-    localStorage.setItem("login", login); 
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.error || "Registration failed");
@@ -36,34 +48,19 @@ export const register = async (login, password, role = 1) => {
 export const login = async (login, password) => {
   try {
     const response = await api.post("/login", { login, password });
-    const { access_token, refresh_token, role } = response.data;
-    if (access_token && refresh_token) {
-      localStorage.setItem("access_token", access_token);
-      localStorage.setItem("refresh_token", refresh_token);
-      localStorage.setItem("login", login); 
-      if (role) localStorage.setItem("role", role); 
-      console.log("Tokens and user data saved to localStorage:", { access_token, refresh_token, login, role });
-    }
+    localStorage.setItem("access_token", response.data.access_token);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.error || "Login failed");
   }
 };
 
-export const refreshToken = async () => {
-  const refreshToken = localStorage.getItem("refresh_token");
-  if (!refreshToken) throw new Error("No refresh token available");
-
+export const getUserInfo = async () => {
   try {
-    const response = await api.post("/refresh", {}, {
-      headers: { Authorization: `Bearer ${refreshToken}` },
-    });
-    const { access_token } = response.data;
-    localStorage.setItem("access_token", access_token);
-    console.log("New access token saved:", access_token);
-    return access_token;
+    const response = await api.get("/user-info");
+    return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Refresh failed");
+    throw new Error(error.response?.data?.error || "Failed to get user info");
   }
 };
 

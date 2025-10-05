@@ -3,9 +3,12 @@ package handlers
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"backend/models"
 	"backend/utils"
+
+	"errors"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -104,22 +107,37 @@ func Login(c *fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate refresh token"})
 	}
 
-	// send token json
+	// Set refresh token as HTTP-only cookie
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Expires:  time.Now().Add(24 * time.Hour),
+		HTTPOnly: true,
+		Secure:   false,
+		SameSite: "Strict",
+		Path:     "/",
+	})
+
+	// Send access token in response
 	return c.JSON(fiber.Map{
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
+		"access_token": accessToken,
 	})
 }
 
 // Refresh handler
 func Refresh(c *fiber.Ctx) error {
-	refreshTokenStr := utils.GetTokenFromRequest(c)
+	refreshTokenStr := c.Cookies("refresh_token")
 	if refreshTokenStr == "" {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Missing refresh token"})
 	}
 
 	// Parse and validate refresh token
-	token, err := utils.GetToken(c)
+	token, err := jwt.Parse(refreshTokenStr, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(utils.GetEnv("REFRESH_SECRET")), nil
+	})
 	if err != nil || !token.Valid {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid refresh token"})
 	}
