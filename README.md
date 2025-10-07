@@ -35,3 +35,15 @@
    go mod tidy
    go run main.go
    ```
+
+
+### Importing Postman Collection
+
+1. **Install** [Postman](https://www.postman.com/downloads/)
+
+2. **Import the collection**
+   ```bash
+   Click on the Import button
+   use file systemControl.postman_collection.json
+   click Open to import the collection
+   ```
