@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { getProjects } from '../services/projectService';
+import { isAuthenticated } from '../services/authService';
 import '../styles/home.css';
 
-
 const CARDS_PER_PAGE = 4;
-
-// Sample card data
-const INITIAL_CARD_DATA = [
-  { id: 1, title: "XX 'Hau'", image: "/image/example.jpg" },
-  { id: 2, title: "123", image: "/image/example.jpg" },
-  { id: 3, title: "ABC", image: "/image/example.jpg" },
-  { id: 4, title: "DEF", image: "/image/example.jpg" },
-  { id: 5, title: "GHI", image: "/image/example.jpg" },
-];
 
 // Animation settings for card grid
 const CARD_GRID_VARIANTS = {
@@ -35,40 +28,56 @@ const SEARCH_BAR_ANIMATION = {
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const filteredCards = INITIAL_CARD_DATA.filter((card) =>
-    card.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const indexOfLastCard = currentPage * CARDS_PER_PAGE;
-  const indexOfFirstCard = indexOfLastCard - CARDS_PER_PAGE;
-  const currentCards = filteredCards.slice(indexOfFirstCard, indexOfLastCard);
-  const totalPages = Math.ceil(filteredCards.length / CARDS_PER_PAGE);
+  const [projects, setProjects] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
+    if (!isAuthenticated()) {
+      navigate('/login');
+      return;
+    }
 
+    const fetchProjects = async () => {
+      setLoading(true);
+      try {
+        const data = await getProjects(currentPage, CARDS_PER_PAGE, searchTerm);
+        setProjects(data.projects || []);
+        setTotalPages(data.pagination?.totalPages || 1);
+      } catch (error) {
+        console.error('Error fetching projects:', error.message);
+        if (error.message.includes('Unauthorized')) {
+          navigate('/login');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, [currentPage, searchTerm, navigate]);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Render Card
-  const renderCard = (card) => (
+  const renderCard = (project) => (
     <motion.div
-      key={card.id}
+      key={project.id}
       variants={CARD_VARIANTS}
     >
       <div className="home-card">
         <div className="home-card-content">
           <img
-            src={card.image}
-            alt={card.title}
+            src="/image/example.jpg"
+            alt={project.title}
             className="home-card-image"
           />
           <div className="home-card-text">
             <div className="home-card-title-frame">
               <input
                 type="text"
-                value={card.title}
+                value={project.title}
                 readOnly
                 className="home-card-title"
               />
@@ -119,7 +128,6 @@ export default function Home() {
     </div>
   );
 
-  // Main Render
   return (
     <div className="home-container">
       <title>systemControl - Home</title>
@@ -146,18 +154,22 @@ export default function Home() {
           </motion.div>
 
           {/* Card Grid */}
-          <motion.div
-            className="home-card-grid"
-            key={currentPage}
-            variants={CARD_GRID_VARIANTS}
-            initial="hidden"
-            animate="visible"
-          >
-            {currentCards.map(renderCard)}
-          </motion.div>
+          {loading ? (
+            <p>Loading projects...</p>
+          ) : (
+            <motion.div
+              className="home-card-grid"
+              key={currentPage}
+              variants={CARD_GRID_VARIANTS}
+              initial="hidden"
+              animate="visible"
+            >
+              {projects.map(renderCard)}
+            </motion.div>
+          )}
 
           {/* Pagination */}
-          {renderPagination()}
+          {!loading && renderPagination()}
         </div>
       </div>
     </div>
