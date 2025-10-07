@@ -4,7 +4,7 @@ const API_URL = process.env.NODE_ENV === "development" ? "http://localhost:3000/
 
 const projectApi = axios.create({
   baseURL: API_URL,
-  withCredentials: true, 
+  withCredentials: true,
 });
 
 projectApi.interceptors.request.use(
@@ -35,5 +35,14 @@ export const getProject = async (projectId) => {
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.error || "Failed to fetch project");
+  }
+};
+
+export const createProject = async (title, description = "") => {
+  try {
+    const response = await projectApi.post("/projects", { title, description });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Failed to create project");
   }
 };

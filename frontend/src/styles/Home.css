@@ -36,9 +36,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 0 auto 30px auto; 
-  position: relative; 
-  will-change: transform; 
+  margin: 0 auto 30px auto;
+  position: relative;
+  will-change: transform;
 }
 
 .home-search-input {
@@ -54,6 +54,7 @@
   font-family: 'Poppins', sans-serif;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
   overflow: hidden;
+  position: relative;
 }
 
 .home-search-input:focus {
@@ -94,19 +95,46 @@
 
 .home-search-icon {
   position: absolute;
-  right: 15px; 
+  right: 28%;
   top: 50%;
   transform: translateY(-50%);
   width: 22px;
   height: 22px;
-  transition: transform 0.3s ease; 
-  filter: invert(15%) sepia(90%) saturate(5000%) hue-rotate(350deg) brightness(90%) contrast(90%); 
+  transition: transform 0.3s ease;
+  filter: invert(15%) sepia(90%) saturate(5000%) hue-rotate(350deg) brightness(90%) contrast(90%);
   pointer-events: none;
   user-select: none;
 }
 
 .home-search-bar:focus-within .home-search-icon {
   transform: translateY(-50%) scale(1.2);
+}
+
+/* Create Project Button */
+.home_create_project {
+  background-color: #3A6FF8;
+  border: none;
+  color: #fff;
+  padding: 12px 25px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 5px rgba(58, 111, 248, 0.3);
+  position: absolute;
+  right: 40px;
+  top: 0;
+}
+
+.home_create_project:hover {
+  background-color: #2a54c8;
+  box-shadow: 0 0 15px rgba(58, 111, 248, 0.5);
+  transform: scale(1.05);
+}
+
+.home_create_project:active {
+  transform: scale(0.95);
 }
 
 /* Card grid layout */
@@ -117,7 +145,7 @@
   margin-bottom: 20px;
   padding: 10px;
   align-content: flex-start;
-  will-change: transform; 
+  will-change: transform;
 }
 
 /* Card styles */
@@ -152,6 +180,7 @@
 .home-card-text {
   flex-grow: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   margin-left: 10px;
@@ -174,7 +203,16 @@
   pointer-events: none;
 }
 
-/* button styles */
+.home-card-description {
+  color: #888;
+  font-size: 14px;
+  opacity: 0.7;
+  margin-top: 5px;
+  text-align: center;
+  width: 70%;
+}
+
+/* Button styles */
 .home-view-defects {
   background-color: #3A6FF8;
   border: none;
@@ -245,4 +283,117 @@
 .home-pagination button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+/* Create Project Modal */
+.create_project_modal_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.create_project_modal {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 15px;
+  width: 600px;
+  height: 600px;
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  border: 2px solid #000;
+  position: relative;
+  overflow: hidden;
+}
+
+.create_project_modal h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.create_project_modal_content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 40px;
+  height: 80%;
+  overflow-y: visible;
+}
+
+.create_project_form_group {
+  text-align: left;
+  margin: 15px 0;
+}
+
+.create_project_form_group label {
+  display: block;
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.create_project_upload,
+.create_project_input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  box-sizing: border-box;
+}
+
+.create_project_upload:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.create_project_modal_buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+}
+
+.create_project_create {
+  background-color: #EF1519;
+  border: none;
+  color: #fff;
+  margin-bottom: 10px;
+  padding: 10px 60px; 
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(239, 21, 25, 0.4);
+}
+
+.create_project_create:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(239, 21, 25, 0.6);
+}
+
+.create_project_create:active {
+  transform: scale(0.98);
+}
+
+.create_project_modal img {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.create_project_modal img:hover {
+  transform: scale(1.1);
+  opacity: 0.8;
 }
