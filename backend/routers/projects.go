@@ -9,7 +9,7 @@ import (
 
 func RegisterProjectRoutes(router fiber.Router) {
 	projects := router.Group("/projects")
-	projects.Use(middleware.JWTMiddleware())
+	projects.Use(middleware.JWTMiddleware)
 	projects.Post("/", handlers.CreateProject)
 	projects.Put("/:projectId", handlers.UpdateProject)
 	projects.Get("/", handlers.GetProjects)

@@ -44,5 +44,8 @@ func main() {
 	//projects setup
 	routers.RegisterProjectRoutes(api)
 
+	// defects setup
+	routers.RegisterDefectsRoutes(api)
+
 	log.Fatal(app.Listen(":3000"))
 }

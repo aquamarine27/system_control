@@ -194,9 +194,13 @@ export default function Home() {
             </motion.button>
           </div>
 
-          {/* Cards */}
-          {loading ? (
-            <p>Loading projects...</p>
+          {/* Cards or No Projects Message */}
+          {!isModalOpen && loading ? (
+            <p className="home-loading">Loading projects...</p>
+          ) : !isModalOpen && projects.length === 0 ? (
+            <div className="home-no-projects">
+              <p>No projects</p>
+            </div>
           ) : (
             <motion.div
               className="home-card-grid"
@@ -207,10 +211,10 @@ export default function Home() {
             >
               {projects.map(renderCard)}
             </motion.div>
-          )}
+          ) }
 
           {/* Pagination */}
-          {!loading && (
+          {!isModalOpen && !loading && projects.length > 0 && (
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}

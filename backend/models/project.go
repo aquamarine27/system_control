@@ -10,10 +10,3 @@ type Project struct {
 	ImageURL    string   `json:"image_url"`
 	Defects     []Defect `gorm:"foreignKey:ProjectID" json:"defects"`
 }
-
-// Defect struct
-type Defect struct {
-	gorm.Model
-	ProjectID uint   `gorm:"not null" json:"project_id"`
-	Title     string `json:"title"`
-}

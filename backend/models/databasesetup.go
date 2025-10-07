@@ -49,7 +49,7 @@ func Setup() error {
 		log.Fatal("Cannot connect to the database:", err)
 	}
 
-	if err := dbGorm.AutoMigrate(&User{}, &Project{}); err != nil {
+	if err := dbGorm.AutoMigrate(&User{}, &Project{}, &Defect{}); err != nil {
 		log.Fatal("Auto migration failed:", err)
 	}
 
