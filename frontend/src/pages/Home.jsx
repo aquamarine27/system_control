@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import Pagination from '../components/Pagination';
 import { getProjects, createProject } from '../services/projectService';
 import { isAuthenticated } from '../services/authService';
 import '../styles/home.css';
@@ -147,45 +148,6 @@ export default function Home() {
     </motion.div>
   );
 
-  // Render Pagination
-  const renderPagination = () => (
-    <div className="home-pagination">
-      <button
-        onClick={() => paginate(1)}
-        disabled={currentPage === 1}
-      >
-        &lt;&lt;
-      </button>
-      <button
-        onClick={() => paginate(currentPage - 1)}
-        disabled={currentPage === 1}
-      >
-        &lt;
-      </button>
-      {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
-        <button
-          key={number}
-          onClick={() => paginate(number)}
-          className={currentPage === number ? 'active' : ''}
-        >
-          {number}
-        </button>
-      ))}
-      <button
-        onClick={() => paginate(currentPage + 1)}
-        disabled={currentPage === totalPages}
-      >
-        &gt;
-      </button>
-      <button
-        onClick={() => paginate(totalPages)}
-        disabled={currentPage === totalPages}
-      >
-        &gt;&gt;
-      </button>
-    </div>
-  );
-
   return (
     <div className="home-container">
       <title>systemControl - Home</title>
@@ -243,7 +205,13 @@ export default function Home() {
           )}
 
           {/* Pagination */}
-          {!loading && renderPagination()}
+          {!loading && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              paginate={paginate}
+            />
+          )}
 
           {/* Create Project Modal */}
           {isModalOpen && (
@@ -257,7 +225,7 @@ export default function Home() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <img
-                    src="/public/back-arrow.png"
+                    src="/back-arrow.png"
                     alt="Back"
                     style={{ width: '30px', height: '30px', cursor: 'pointer' }}
                     onClick={handleCloseModal}
