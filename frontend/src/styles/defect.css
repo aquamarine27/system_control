@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+@import url('./pagination.css');
+
+.defect-container {
+  display: flex;
+  height: 100vh;
+  background-color: #000;
+  overflow: hidden;
+}
+
+.defect-content {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.defect-main {
+  background-color: #fff;
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+  width: 1420px;
+  height: 800px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  position: relative;
+  margin-left: 20px;
+  overflow: hidden;
+}
+
+/* Search bar section */
+.defect-search-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 30px auto;
+  position: relative;
+  will-change: transform;
+}
+
+.defect-search-input {
+  width: 580px;
+  height: 33px;
+  padding: 10px 50px 10px 20px;
+  border: none;
+  background-color: #000000;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: all 0.4s ease, transform 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  position: relative;
+}
+
+.defect-search-input:focus {
+  outline: none;
+  transform: scale(1.05);
+  background: #141414;
+  box-shadow: 0 0 15px rgba(239, 21, 25, 0.5);
+  color: #fff;
+}
+
+.defect-search-input::placeholder {
+  color: #bbb;
+  transition: color 0.4s ease, opacity 0.4s ease;
+  opacity: 0.7;
+}
+
+.defect-search-input:focus::placeholder {
+  color: #ddd;
+  opacity: 1;
+}
+
+.defect-search-input {
+  opacity: 0.8;
+}
+
+.defect-search-input:focus {
+  animation: fadeTextIn 0.4s ease forwards;
+}
+
+@keyframes fadeTextIn {
+  from {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.defect-search-icon {
+  position: absolute;
+  right: 28%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  transition: transform 0.3s ease;
+  filter: invert(15%) sepia(90%) saturate(5000%) hue-rotate(350deg) brightness(90%) contrast(90%);
+  pointer-events: none;
+  user-select: none;
+}
+
+.defect-search-bar:focus-within .defect-search-icon {
+  transform: translateY(-50%) scale(1.2);
+}

@@ -121,7 +121,7 @@ export default function Home() {
   // Render Card
   const renderCard = (project) => (
     <motion.div
-      key={project.id}
+      key={project.id || Math.random()}
       variants={CARD_VARIANTS}
     >
       <div className="home-card">
@@ -143,7 +143,12 @@ export default function Home() {
             <p className="home-card-description">{project.description || 'No description'}</p>
           </div>
         </div>
-        <button className="home-view-defects">View defects</button>
+        <button
+          className="home-view-defects"
+          onClick={() => navigate('/defects')}
+        >
+          View defects
+        </button>
       </div>
     </motion.div>
   );
