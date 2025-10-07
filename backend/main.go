@@ -34,7 +34,12 @@ func main() {
 
 	api := app.Group("/api/v1")
 	auth := api.Group("/auth")
+
+	//auth setup
 	routers.RegisterAuthRoutes(auth)
+
+	//projects setup
+	routers.RegisterProjectRoutes(api)
 
 	log.Fatal(app.Listen(":3000"))
 }
