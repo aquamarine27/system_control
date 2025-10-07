@@ -170,9 +170,9 @@
 }
 
 .home-card-image {
-  width: 340px;
+  width: 500px;
   height: 220px;
-  object-fit: cover;
+  object-fit: fill; 
   border-radius: 5px;
   margin-right: 20px;
 }
@@ -301,10 +301,9 @@
 
 .create_project_modal {
   background-color: #fff;
-  padding: 30px;
+  padding: 20px;
   border-radius: 15px;
   width: 600px;
-  height: 600px;
   text-align: center;
   font-family: 'Poppins', sans-serif;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
@@ -322,15 +321,19 @@
 .create_project_modal_content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 40px;
-  height: 80%;
+  gap: 10px; 
+  padding: 20px;
+  height: auto;
   overflow-y: visible;
+}
+
+.create_project_modal_content.has-preview {
+  gap: 5px; 
 }
 
 .create_project_form_group {
   text-align: left;
-  margin: 15px 0;
+  margin: 5px 0; 
 }
 
 .create_project_form_group label {
@@ -343,7 +346,7 @@
 .create_project_upload,
 .create_project_input {
   width: 100%;
-  padding: 12px;
+  padding: 10px; 
   border: 1px solid #ddd;
   border-radius: 5px;
   font-size: 14px;
@@ -359,20 +362,22 @@
 .create_project_modal_buttons {
   display: flex;
   justify-content: center;
-  margin-top: 20px;
-  position: absolute;
-  bottom: 20px;
-  left: 0;
-  right: 0;
+  margin-top: 10px; 
+  padding-bottom: 5px; 
+  position: static;
+}
+
+.has-preview .create_project_modal_buttons {
+  margin-top: 5px; 
 }
 
 .create_project_create {
   background-color: #EF1519;
   border: none;
   color: #fff;
-  margin-bottom: 10px;
-  padding: 10px 60px; 
-  border-radius: 10px;
+  margin-bottom: 5px; 
+  padding: 10px 55px; 
+  border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
   font-family: 'Poppins', sans-serif;
@@ -396,4 +401,15 @@
 .create_project_modal img:hover {
   transform: scale(1.1);
   opacity: 0.8;
+}
+
+/*preview*/
+.create_project_preview {
+  width: 220px;
+  height: 110px;
+  object-fit: fill;
+  display: block;
+  margin: 5px auto; 
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }

@@ -33,9 +33,10 @@ const CREATE_BUTTON_ANIMATION = {
 };
 
 // Animation settings for modal form
-const MODAL_FORM_ANIMATION = {
+const MODAL_VARIANTS = {
   hidden: { opacity: 0, y: 50, scale: 0.9 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.3, ease: 'easeOut' } },
+  withoutImage: { opacity: 1, y: 0, scale: 1, height: '500px', transition: { duration: 0.3, ease: 'easeOut' } },
+  withImage: { opacity: 1, y: 0, scale: 1, height: '600px', transition: { duration: 0.3, ease: 'easeOut' } },
 };
 
 export default function Home() {
@@ -47,7 +48,12 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const navigate = useNavigate();
+
+  // api_url for image
+  const API_BASE = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "http://backend:3000";
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -58,12 +64,10 @@ export default function Home() {
     const fetchProjects = async () => {
       setLoading(true);
       try {
-        console.log(`Fetching projects: page=${currentPage}, limit=${CARDS_PER_PAGE}, search=${searchTerm}`);
         const data = await getProjects(currentPage, CARDS_PER_PAGE, searchTerm);
         setProjects(data.projects || []);
         setTotalPages(data.pagination?.totalPages || 1);
       } catch (error) {
-        console.error('Error fetching projects:', error.message);
         if (error.message.includes('Unauthorized')) {
           navigate('/login');
         }
@@ -77,23 +81,40 @@ export default function Home() {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
   const handleCreateProject = async () => {
     if (!title.trim()) {
       alert('Title is required');
       return;
     }
     try {
-      await createProject(title, description);
+      await createProject(title, description, imageFile);
       setTitle('');
       setDescription('');
+      setImageFile(null);
+      setPreviewUrl(null);
       setIsModalOpen(false);
       const data = await getProjects(currentPage, CARDS_PER_PAGE, searchTerm);
       setProjects(data.projects || []);
       setTotalPages(data.pagination?.totalPages || 1);
     } catch (error) {
-      console.error('Error creating project:', error.message);
       alert('Failed to create project');
     }
+  };
+
+  const handleCloseModal = () => {
+    setTitle('');
+    setDescription('');
+    setImageFile(null);
+    setPreviewUrl(null);
+    setIsModalOpen(false);
   };
 
   // Render Card
@@ -105,7 +126,7 @@ export default function Home() {
       <div className="home-card">
         <div className="home-card-content">
           <img
-            src="/image/example.jpg"
+            src={project.image_url ? `${API_BASE}${project.image_url}` : "/image/example.jpg"}
             alt={project.title}
             className="home-card-image"
           />
@@ -206,7 +227,7 @@ export default function Home() {
             </motion.button>
           </div>
 
-          {/* Cards*/}
+          {/* Cards */}
           {loading ? (
             <p>Loading projects...</p>
           ) : (
@@ -230,24 +251,36 @@ export default function Home() {
               <motion.div
                 className="create_project_modal"
                 onClick={(e) => e.stopPropagation()}
-                variants={MODAL_FORM_ANIMATION}
+                variants={MODAL_VARIANTS}
                 initial="hidden"
-                animate="visible"
-                exit="hidden"
+                animate={previewUrl ? 'withImage' : 'withoutImage'}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <img src="/public/back-arrow.png" alt="Back" style={{ width: '30px', height: '30px', cursor: 'pointer' }} onClick={() => setIsModalOpen(false)} />
+                  <img
+                    src="/public/back-arrow.png"
+                    alt="Back"
+                    style={{ width: '30px', height: '30px', cursor: 'pointer' }}
+                    onClick={handleCloseModal}
+                  />
                   <h2>Create New Project</h2>
                   <div style={{ width: '30px' }}></div>
                 </div>
-                <div className="create_project_modal_content">
+                <div className={`create_project_modal_content ${previewUrl ? 'has-preview' : ''}`}>
                   <div className="create_project_form_group">
-                    <label>Upload Image (todo)</label>
+                    <label>Upload Image</label>
                     <input
                       type="file"
-                      disabled
+                      accept="image/*"
+                      onChange={handleImageChange}
                       className="create_project_upload"
                     />
+                    {previewUrl && (
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="create_project_preview"
+                      />
+                    )}
                   </div>
                   <div className="create_project_form_group">
                     <label>Title</label>
@@ -257,7 +290,7 @@ export default function Home() {
                       onChange={(e) => setTitle(e.target.value)}
                       className="create_project_input"
                       placeholder="Enter project title"
-                      maxLength="8" 
+                      maxLength="8"
                     />
                   </div>
                   <div className="create_project_form_group">
@@ -267,21 +300,21 @@ export default function Home() {
                       onChange={(e) => setDescription(e.target.value)}
                       className="create_project_input"
                       placeholder="Enter project description"
-                      maxLength="15" 
+                      maxLength="15"
                       style={{ height: '100px', resize: 'none' }}
                     />
                   </div>
-                </div>
-                <div className="create_project_modal_buttons">
-                  <motion.button
-                    className="create_project_create"
-                    onClick={handleCreateProject}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
-                  >
-                    Create
-                  </motion.button>
+                  <div className="create_project_modal_buttons">
+                    <motion.button
+                      className="create_project_create"
+                      onClick={handleCreateProject}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                    >
+                      Create
+                    </motion.button>
+                  </div>
                 </div>
               </motion.div>
             </div>

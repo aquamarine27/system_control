@@ -8,6 +8,7 @@ type Project struct {
 	Title       string   `gorm:"not null" json:"title"`
 	Description string   `json:"description"`
 	UserID      uint     `gorm:"index" json:"user_id"`
+	ImageURL    string   `json:"image_url"`
 	Defects     []Defect `gorm:"foreignKey:ProjectID" json:"defects"`
 }
 

@@ -32,6 +32,9 @@ func main() {
 		AllowCredentials: true,
 	}))
 
+	// Static serving
+	app.Static("/upload", "./upload")
+
 	api := app.Group("/api/v1")
 	auth := api.Group("/auth")
 

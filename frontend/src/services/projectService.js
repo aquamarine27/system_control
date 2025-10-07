@@ -2,6 +2,9 @@ import axios from "axios";
 
 const API_URL = process.env.NODE_ENV === "development" ? "http://localhost:3000/api/v1" : "http://backend:3000/api/v1";
 
+// for image
+const API_BASE = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "http://backend:3000";
+
 const projectApi = axios.create({
   baseURL: API_URL,
   withCredentials: true,
@@ -38,11 +41,21 @@ export const getProject = async (projectId) => {
   }
 };
 
-export const createProject = async (title, description = "") => {
+export const createProject = async (title, description = "", imageFile = null) => {
   try {
-    const response = await projectApi.post("/projects", { title, description });
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+    const response = await projectApi.post("/projects", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.error || "Failed to create project");
   }
 };
+
+export { API_BASE };

@@ -2,11 +2,14 @@ package handlers
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"backend/models"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -22,29 +25,45 @@ type UpdateProjectInput struct {
 
 // CreateProject handler
 func CreateProject(c *fiber.Ctx) error {
-	var input CreateProjectInput
-	if err := c.BodyParser(&input); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
-	}
-
-	input.Title = strings.TrimSpace(input.Title)
-	input.Description = strings.TrimSpace(input.Description)
-
 	userID, ok := c.Locals("user_id").(uint)
 	if !ok {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 	}
 
+	title := strings.TrimSpace(c.FormValue("title"))
+	description := strings.TrimSpace(c.FormValue("description"))
+
+	if title == "" || len(title) < 3 {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Title is required and must be at least 3 characters"})
+	}
+
 	// Check if project with the same title exists
 	var existingProject models.Project
-	if err := models.DB.Where("title = ?", input.Title).First(&existingProject).Error; err == nil {
+	if err := models.DB.Where("title = ?", title).First(&existingProject).Error; err == nil {
 		return c.Status(http.StatusConflict).JSON(fiber.Map{"error": "Project with this title already exists"})
 	}
 
+	var imageURL string
+	file, err := c.FormFile("image")
+	if err == nil {
+		// create folder for image
+		if err := os.MkdirAll("./upload", os.ModePerm); err != nil {
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create upload directory"})
+		}
+
+		ext := filepath.Ext(file.Filename)
+		filename := uuid.New().String() + ext
+		if err := c.SaveFile(file, "./upload/"+filename); err != nil {
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save image"})
+		}
+		imageURL = "/upload/" + filename
+	}
+
 	project := models.Project{
-		Title:       input.Title,
-		Description: input.Description,
+		Title:       title,
+		Description: description,
 		UserID:      userID,
+		ImageURL:    imageURL,
 	}
 
 	if err := models.DB.Create(&project).Error; err != nil {
@@ -59,14 +78,6 @@ func CreateProject(c *fiber.Ctx) error {
 
 // UpdateProject handler
 func UpdateProject(c *fiber.Ctx) error {
-	var input UpdateProjectInput
-	if err := c.BodyParser(&input); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
-	}
-
-	input.Title = strings.TrimSpace(input.Title)
-	input.Description = strings.TrimSpace(input.Description)
-
 	userID, ok := c.Locals("user_id").(uint)
 	if !ok {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
@@ -87,18 +98,36 @@ func UpdateProject(c *fiber.Ctx) error {
 		return c.Status(http.StatusForbidden).JSON(fiber.Map{"error": "You can only edit your own projects"})
 	}
 
+	title := strings.TrimSpace(c.FormValue("title"))
+	description := strings.TrimSpace(c.FormValue("description"))
+
 	// Prepare updates
 	updates := make(map[string]interface{})
-	if input.Title != "" {
+	if title != "" && len(title) >= 3 {
 		// Check for duplicate title
 		var existingProject models.Project
-		if err := models.DB.Where("title = ? AND id != ?", input.Title, projectID).First(&existingProject).Error; err == nil {
+		if err := models.DB.Where("title = ? AND id != ?", title, projectID).First(&existingProject).Error; err == nil {
 			return c.Status(http.StatusConflict).JSON(fiber.Map{"error": "Project with this title already exists"})
 		}
-		updates["title"] = input.Title
+		updates["title"] = title
 	}
-	if input.Description != "" {
-		updates["description"] = input.Description
+	if description != "" {
+		updates["description"] = description
+	}
+
+	file, err := c.FormFile("image")
+	if err == nil {
+
+		if err := os.MkdirAll("./upload", os.ModePerm); err != nil {
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create upload directory"})
+		}
+
+		ext := filepath.Ext(file.Filename)
+		filename := uuid.New().String() + ext
+		if err := c.SaveFile(file, "./upload/"+filename); err != nil {
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save image"})
+		}
+		updates["image_url"] = "/upload/" + filename
 	}
 
 	if len(updates) == 0 {
@@ -118,7 +147,6 @@ func UpdateProject(c *fiber.Ctx) error {
 
 // GetProjects handler
 func GetProjects(c *fiber.Ctx) error {
-
 	userID, ok := c.Locals("user_id").(uint)
 	if !ok {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
@@ -165,7 +193,6 @@ func GetProjects(c *fiber.Ctx) error {
 
 // GetProject handler
 func GetProject(c *fiber.Ctx) error {
-
 	userID, ok := c.Locals("user_id").(uint)
 	if !ok {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
