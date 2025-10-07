@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -54,7 +54,10 @@ export default function Home() {
   const navigate = useNavigate();
 
   // api_url for image
-  const API_BASE = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "http://backend:3000";
+  const API_BASE = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'http://backend:3000';
+
+  // Ref to control animation
+  const cardGridRef = useRef(null);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -121,13 +124,16 @@ export default function Home() {
   // Render Card
   const renderCard = (project) => (
     <motion.div
-      key={project.id || Math.random()}
+      key={project.id} 
       variants={CARD_VARIANTS}
+      initial="hidden"
+      animate="visible"
+      whileInView={{ opacity: 1 }} 
     >
       <div className="home-card">
         <div className="home-card-content">
           <img
-            src={project.image_url ? `${API_BASE}${project.image_url}` : "/image/example.jpg"}
+            src={project.image_url ? `${API_BASE}${project.image_url}` : '/image/example.jpg'}
             alt={project.title}
             className="home-card-image"
           />
@@ -204,14 +210,15 @@ export default function Home() {
           ) : (
             <motion.div
               className="home-card-grid"
-              key={currentPage}
+              ref={cardGridRef}
               variants={CARD_GRID_VARIANTS}
               initial="hidden"
-              animate="visible"
+              animate={isModalOpen ? 'visible' : 'hidden'} 
+              whileInView={isModalOpen ? undefined : { opacity: 1 }}
             >
               {projects.map(renderCard)}
             </motion.div>
-          ) }
+          )}
 
           {/* Pagination */}
           {!isModalOpen && !loading && projects.length > 0 && (
@@ -224,7 +231,7 @@ export default function Home() {
 
           {/* Create Project Modal */}
           {isModalOpen && (
-            <div className="create_project_modal_overlay">
+            <div className="create_project_modal_overlay" onClick={handleCloseModal}>
               <motion.div
                 className="create_project_modal"
                 onClick={(e) => e.stopPropagation()}
