@@ -12,4 +12,5 @@ func RegisterAuthRoutes(router fiber.Router) {
 	router.Post("/login", handlers.Login)
 	router.Post("/refresh", handlers.Refresh)
 	router.Get("/user-info", middleware.JWTMiddleware(), handlers.GetUserInfo)
+	router.Post("/update-password", handlers.UpdatePassword)
 }

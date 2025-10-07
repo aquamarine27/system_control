@@ -168,7 +168,52 @@ func Refresh(c *fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate new access token"})
 	}
 
+	// Generate new refresh token and update cookie
+	newRefreshToken, err := utils.GenerateRefreshToken(user)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate new refresh token"})
+	}
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    newRefreshToken,
+		Expires:  time.Now().Add(24 * time.Hour),
+		HTTPOnly: true,
+		Secure:   false,
+		SameSite: "Strict",
+		Path:     "/",
+	})
+
 	return c.JSON(fiber.Map{"access_token": accessToken})
+}
+
+// UpdatePassword handler
+func UpdatePassword(c *fiber.Ctx) error {
+	var input struct {
+		Login    string `json:"login"`
+		Password string `json:"password"`
+	}
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	var user models.User
+	if err := models.DB.Where("login = ?", input.Login).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+		}
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
+	}
+
+	user.Password = input.Password
+	if err := user.HashPassword(); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to hash password"})
+	}
+
+	if err := models.DB.Save(&user).Error; err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update password"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Password updated successfully"})
 }
 
 // GetUserInfo handler

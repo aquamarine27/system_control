@@ -7,6 +7,9 @@ const api = axios.create({
   withCredentials: true,
 });
 
+let isRefreshing = false;
+let refreshSubscribers = [];
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("access_token");
   if (token) {
@@ -21,17 +24,34 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      try {
-        const response = await api.post("/refresh");
-        localStorage.setItem("access_token", response.data.access_token);
-        originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        console.error("Refresh token failed:", refreshError.response?.data?.error || refreshError.message);
-        return Promise.reject(refreshError);
+
+      if (!isRefreshing) {
+        isRefreshing = true;
+
+        try {
+          const response = await api.post("/refresh");
+          const newAccessToken = response.data.access_token;
+          localStorage.setItem("access_token", newAccessToken);
+          refreshSubscribers.forEach(callback => callback(newAccessToken));
+          refreshSubscribers = [];
+        } catch (refreshError) {
+          refreshSubscribers = [];
+          localStorage.removeItem("access_token");
+          document.cookie = "refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          window.location.href = "/login";
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
       }
+
+      return new Promise((resolve) => {
+        refreshSubscribers.push((newAccessToken) => {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          resolve(api(originalRequest));
+        });
+      });
     }
-    console.error("API request failed:", error.response?.data?.error || error.message);
     return Promise.reject(error);
   }
 );
