@@ -26,11 +26,6 @@ type UpdateProjectInput struct {
 
 // CreateProject handler
 func CreateProject(c *fiber.Ctx) error {
-	userID, ok := c.Locals("user_id").(uint)
-	if !ok {
-		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
-	}
-
 	title := strings.TrimSpace(c.FormValue("title"))
 	description := strings.TrimSpace(c.FormValue("description"))
 
@@ -77,7 +72,6 @@ func CreateProject(c *fiber.Ctx) error {
 	project := models.Project{
 		Title:       title,
 		Description: description,
-		UserID:      userID,
 		ImageURL:    imageURL,
 	}
 
@@ -94,11 +88,6 @@ func CreateProject(c *fiber.Ctx) error {
 
 // UpdateProject handler
 func UpdateProject(c *fiber.Ctx) error {
-	userID, ok := c.Locals("user_id").(uint)
-	if !ok {
-		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
-	}
-
 	// Get project ID from URL
 	projectID := c.Params("projectId")
 	var project models.Project
@@ -109,15 +98,9 @@ func UpdateProject(c *fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
 	}
 
-	// Check if the user is the owner
-	if project.UserID != userID {
-		return c.Status(http.StatusForbidden).JSON(fiber.Map{"error": "You can only edit your own projects"})
-	}
-
 	title := strings.TrimSpace(c.FormValue("title"))
 	description := strings.TrimSpace(c.FormValue("description"))
 
-	// Prepare updates
 	updates := make(map[string]interface{})
 	if title != "" && len(title) >= 3 {
 		// Check for duplicate title
@@ -178,11 +161,6 @@ func UpdateProject(c *fiber.Ctx) error {
 
 // GetProjects handler
 func GetProjects(c *fiber.Ctx) error {
-	userID, ok := c.Locals("user_id").(uint)
-	if !ok {
-		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
-	}
-
 	page := c.QueryInt("page", 1)
 	limit := c.QueryInt("limit", 4)
 	search := strings.TrimSpace(c.Query("search", ""))
@@ -198,7 +176,7 @@ func GetProjects(c *fiber.Ctx) error {
 	var projects []models.Project
 	var total int64
 
-	query := models.DB.Where("user_id = ?", userID)
+	query := models.DB
 	if search != "" {
 		query = query.Where("title ILIKE ?", "%"+search+"%")
 	}
@@ -224,11 +202,6 @@ func GetProjects(c *fiber.Ctx) error {
 
 // GetProject handler
 func GetProject(c *fiber.Ctx) error {
-	userID, ok := c.Locals("user_id").(uint)
-	if !ok {
-		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
-	}
-
 	projectID := c.Params("projectId")
 	var project models.Project
 	if err := models.DB.First(&project, projectID).Error; err != nil {
@@ -236,11 +209,6 @@ func GetProject(c *fiber.Ctx) error {
 			return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "Project not found"})
 		}
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
-	}
-
-	// Check if the user is the owner
-	if project.UserID != userID {
-		return c.Status(http.StatusForbidden).JSON(fiber.Map{"error": "You can only view your own projects"})
 	}
 
 	return c.Status(http.StatusOK).JSON(project)
@@ -256,6 +224,7 @@ func checkDirectoryPermissions(dir string) error {
 	if !info.IsDir() {
 		return os.ErrInvalid
 	}
+
 	testFile := filepath.Join(dir, ".test_write")
 	f, err := os.Create(testFile)
 	if err != nil {
