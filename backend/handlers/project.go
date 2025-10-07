@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -46,15 +47,29 @@ func CreateProject(c *fiber.Ctx) error {
 	var imageURL string
 	file, err := c.FormFile("image")
 	if err == nil {
-		// create folder for image
-		if err := os.MkdirAll("./upload", os.ModePerm); err != nil {
-			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create upload directory"})
+
+		uploadDir, err := filepath.Abs("./upload")
+		if err != nil {
+			log.Printf("Failed to resolve absolute path for upload directory: %v", err)
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to resolve upload directory path"})
+		}
+
+		if err := os.MkdirAll(uploadDir, 0755); err != nil {
+			log.Printf("Failed to create upload directory %s: %v", uploadDir, err)
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create upload directory: " + err.Error()})
+		}
+
+		if err := checkDirectoryPermissions(uploadDir); err != nil {
+			log.Printf("Directory permission error for %s: %v", uploadDir, err)
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Directory permission error: " + err.Error()})
 		}
 
 		ext := filepath.Ext(file.Filename)
 		filename := uuid.New().String() + ext
-		if err := c.SaveFile(file, "./upload/"+filename); err != nil {
-			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save image"})
+		filePath := filepath.Join(uploadDir, filename)
+		if err := c.SaveFile(file, filePath); err != nil {
+			log.Printf("Failed to save image to %s: %v", filePath, err)
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save image: " + err.Error()})
 		}
 		imageURL = "/upload/" + filename
 	}
@@ -67,7 +82,8 @@ func CreateProject(c *fiber.Ctx) error {
 	}
 
 	if err := models.DB.Create(&project).Error; err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create project"})
+		log.Printf("Failed to create project in database: %v", err)
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create project: " + err.Error()})
 	}
 
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
@@ -118,14 +134,28 @@ func UpdateProject(c *fiber.Ctx) error {
 	file, err := c.FormFile("image")
 	if err == nil {
 
-		if err := os.MkdirAll("./upload", os.ModePerm); err != nil {
-			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create upload directory"})
+		uploadDir, err := filepath.Abs("./upload")
+		if err != nil {
+			log.Printf("Failed to resolve absolute path for upload directory: %v", err)
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to resolve upload directory path"})
+		}
+
+		if err := os.MkdirAll(uploadDir, 0755); err != nil {
+			log.Printf("Failed to create upload directory %s: %v", uploadDir, err)
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create upload directory: " + err.Error()})
+		}
+
+		if err := checkDirectoryPermissions(uploadDir); err != nil {
+			log.Printf("Directory permission error for %s: %v", uploadDir, err)
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Directory permission error: " + err.Error()})
 		}
 
 		ext := filepath.Ext(file.Filename)
 		filename := uuid.New().String() + ext
-		if err := c.SaveFile(file, "./upload/"+filename); err != nil {
-			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save image"})
+		filePath := filepath.Join(uploadDir, filename)
+		if err := c.SaveFile(file, filePath); err != nil {
+			log.Printf("Failed to save image to %s: %v", filePath, err)
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save image: " + err.Error()})
 		}
 		updates["image_url"] = "/upload/" + filename
 	}
@@ -136,7 +166,8 @@ func UpdateProject(c *fiber.Ctx) error {
 
 	// Update project
 	if err := models.DB.Model(&project).Updates(updates).Error; err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update project"})
+		log.Printf("Failed to update project in database: %v", err)
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update project: " + err.Error()})
 	}
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
@@ -213,4 +244,23 @@ func GetProject(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusOK).JSON(project)
+}
+
+// checkDirectoryPermissions
+func checkDirectoryPermissions(dir string) error {
+	info, err := os.Stat(dir)
+	if err != nil {
+		return err
+	}
+
+	if !info.IsDir() {
+		return os.ErrInvalid
+	}
+	testFile := filepath.Join(dir, ".test_write")
+	f, err := os.Create(testFile)
+	if err != nil {
+		return err
+	}
+	f.Close()
+	return os.Remove(testFile)
 }
